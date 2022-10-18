@@ -16,6 +16,11 @@ namespace Snooker
         MySqlConnection con = null; //SQL kapcsolathoz
         MySqlCommand cmd = null; //SQL parancsokhoz
         List<Versenyzo> versenyzok = new List<Versenyzo>(); //az sql-hez a lista létrehozása
+        /*
+        //Oszlopok rendezéséhez
+        private bool rendezes = false; // ha az oszlopok nevére klikkeléssel rendezni akarjuk a táblázatot, akkor kell egy "villanykapcsoló", ami megmutatja, hogy épp fel vagy le van-e kapcsolva a villany (növekvő vagy csökkenő sorrend vagy abc vagy cba sorrend...)
+        private int oszlopNeve;
+        */
 
         public FormNyito()
         {
@@ -68,7 +73,6 @@ namespace Snooker
                 MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
                 Environment.Exit(0); //leállítjuk a programot, ha hiba van a kapcsolódással
             }
-
         }
 
         private void adattablaFrissit()
@@ -143,7 +147,11 @@ namespace Snooker
         // ha bárhova kattintok a táblázatba, akkor az egész sort válassza ki, ehhez a design-ban a dataGridViewVersenyzo-nél keresd meg a SelectionChanged eseményt
         private void dataGridViewVersenyzo_SelectionChanged(object sender, EventArgs e)
         {
-            DataGridViewRow kivalsztottSor = dataGridViewVersenyzo.SelectedRows[0];
+            if (dataGridViewVersenyzo.SelectedRows.Count == 0) //ez a módosítás gombhoz kell, mert a módosításnál nem feltétlen lesz kiválasztott sor
+            {
+                return; //ha nincs, akkor visszatér
+            }
+            DataGridViewRow kivalsztottSor = dataGridViewVersenyzo.SelectedRows[0]; //mivel nincs simán row, ezért az összes sort fogja nézni, onnan is az első elemet
             if (kivalsztottSor.Cells["helyezes"].Value != null) //
             {
                 tbHelyezes.Text = kivalsztottSor.Cells["helyezes"].Value.ToString(); //a kiválasztott szöveg celláinál a helyezés cellának értékét string-é alakítva belerakjuk a szövegdobozba
@@ -152,5 +160,120 @@ namespace Snooker
                 numericUpDownNyeremeny.Value = decimal.Parse(kivalsztottSor.Cells["nyeremeny"].Value.ToString());
             }
         }
+
+        private void btModosit_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                con.Open();
+                cmd.Parameters.Clear();
+                cmd = con.CreateCommand();
+                // a @ azt jelzi, hogy fog kapni valamilyen paramétert később
+                // a paraméterek soha nem nullázódnak ki, ezért két sorral feljebb töröljük ki a cmd.Parameters.Clear();-t
+                // parancsot meghatározzuk, a paramétereket nem szabad " vagy ' közé tenni
+                cmd.CommandText = $"UPDATE `snooker` SET `Nyeremeny`= @osszeg WHERE `Helyezes`= @id;";
+                // végrehajtáshoz szükséges adatokat átadjuk
+                cmd.Parameters.AddWithValue("@id", tbHelyezes.Text); //hozzáadjuk a paramétereket honnan kell vennie, szereti ha string formátum
+                cmd.Parameters.AddWithValue("@osszeg", numericUpDownNyeremeny.Value); //ez szám típus
+                // végrehajtjuk az utasítást, de előbb vizsgáljuk meg a visszatérési értéket
+                if (cmd.ExecuteNonQuery() == 1) //ha csak 1 helyen történt a módosítás, mivel metódust vizsgálunk, végre is hajtódik az cmd.ExecuteNonQuery()
+                {
+                    MessageBox.Show("A nyeremény módosítása megtörtént.");
+                    tbHelyezes.Text = ""; //kinullázzuk az értékeket
+                    tbNev.Text = "";
+                    cbOrszag.Text = "";
+                    numericUpDownNyeremeny.Value = numericUpDownNyeremeny.Minimum; //az alsó értékre állítjuk vissza
+                }
+                else
+                {
+                    MessageBox.Show("Sikertelen");
+                }
+
+                con.Close();
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
+                Environment.Exit(0); //leállítjuk a programot, ha hiba van a kapcsolódással
+            }
+            versenyzokBeolvasasa(); //a listát is törli
+            adattablaFrissit();
+        }
+
+        /* Oszlopok rendezése
+        //ha az oszlopok nevére klikkeléssel rendezni akarjuk a táblázatot, akkor kell hozzá ez a klikk esemény
+        private void dataGridViewVersenyzo_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            try
+            {
+                oszlopNeve = dataGridViewVersenyzo.Columns[e.ColumnIndex].Index;
+                
+                dataGridViewVersenyzo.DataSource = versenyzokBeolvasasaRendezve();
+                adattablaFrissit();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"{ex}");
+            }
+        }
+        
+        private List<Versenyzo> versenyzokBeolvasasaRendezve()
+        {
+            versenyzok.Clear();
+
+            try
+            {
+                con.Open();
+                cmd = con.CreateCommand();
+
+                if (rendezes)
+                {
+                    cmd.CommandText = $"SELECT * FROM `snooker` ORDER BY {dataGridViewVersenyzo.Columns[oszlopNeve].Name} ASC;";
+
+                    using (MySqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            try
+                            {
+                                versenyzok.Add(new Versenyzo(dr.GetInt32("Helyezes"), dr.GetString("Nev"), dr.GetString("Orszag"), dr.GetDecimal("Nyeremeny")));
+                            }
+                            catch (ArgumentException ex)
+                            {
+                                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    cmd.CommandText = $"SELECT * FROM `snooker` ORDER BY {dataGridViewVersenyzo.Columns[oszlopNeve].Name} DESC;";
+
+                    using (MySqlDataReader dr = cmd.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            try
+                            {
+                                versenyzok.Add(new Versenyzo(dr.GetInt32("Helyezes"), dr.GetString("Nev"), dr.GetString("Orszag"), dr.GetDecimal("Nyeremeny")));
+                            }
+                            catch (ArgumentException ex)
+                            {
+                                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
+                            }
+                        }
+                    }
+                }
+                con.Close();
+                rendezes = !rendezes;
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
+                Environment.Exit(0);
+            }
+            return versenyzok;
+        }
+        */
     }
 }

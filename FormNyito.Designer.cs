@@ -30,6 +30,7 @@
         {
             this.dataGridViewVersenyzo = new System.Windows.Forms.DataGridView();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btModosit = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.numericUpDownNyeremeny = new System.Windows.Forms.NumericUpDown();
             this.cbOrszag = new System.Windows.Forms.ComboBox();
@@ -60,6 +61,7 @@
             // groupBox1
             // 
             this.groupBox1.BackColor = System.Drawing.SystemColors.GradientActiveCaption;
+            this.groupBox1.Controls.Add(this.btModosit);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.numericUpDownNyeremeny);
             this.groupBox1.Controls.Add(this.cbOrszag);
@@ -75,6 +77,16 @@
             this.groupBox1.TabIndex = 1;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Versenyző adatai";
+            // 
+            // btModosit
+            // 
+            this.btModosit.Location = new System.Drawing.Point(1014, 94);
+            this.btModosit.Name = "btModosit";
+            this.btModosit.Size = new System.Drawing.Size(127, 28);
+            this.btModosit.TabIndex = 9;
+            this.btModosit.Text = "Módosít";
+            this.btModosit.UseVisualStyleBackColor = true;
+            this.btModosit.Click += new System.EventHandler(this.btModosit_Click);
             // 
             // label4
             // 
@@ -204,6 +216,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.NumericUpDown numericUpDownNyeremeny;
+        private System.Windows.Forms.Button btModosit;
     }
 }
 
