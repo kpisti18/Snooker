@@ -16,11 +16,9 @@ namespace Snooker
         MySqlConnection con = null; //SQL kapcsolathoz
         MySqlCommand cmd = null; //SQL parancsokhoz
         List<Versenyzo> versenyzok = new List<Versenyzo>(); //az sql-hez a lista létrehozása
-        /*
         //Oszlopok rendezéséhez
         private bool rendezes = false; // ha az oszlopok nevére klikkeléssel rendezni akarjuk a táblázatot, akkor kell egy "villanykapcsoló", ami megmutatja, hogy épp fel vagy le van-e kapcsolva a villany (növekvő vagy csökkenő sorrend vagy abc vagy cba sorrend...)
-        private int oszlopNeve;
-        */
+
 
         public FormNyito()
         {
@@ -97,6 +95,12 @@ namespace Snooker
             dataGridViewVersenyzo.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; //ha nem fér el a formon, akkor nem is látható
             dataGridViewVersenyzo.MultiSelect = false; //több cellakijelölést letiltunk
             dataGridViewVersenyzo.SelectionMode = DataGridViewSelectionMode.FullRowSelect; //ezzel pl ha rákattintunk egy elemre, akkor az egész sort kijelöli, nem csak 1 karaktert, vagy szót
+            dataGridViewVersenyzo.EnableHeadersVisualStyles = false;
+            dataGridViewVersenyzo.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewVersenyzo.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(0, 97, 0);
+            dataGridViewVersenyzo.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            dataGridViewVersenyzo.ColumnHeadersDefaultCellStyle.Padding = new Padding(0, 5, 0, 5);
+            dataGridViewVersenyzo.RowTemplate.DefaultCellStyle.Padding = new Padding(0, 1, 0, 1);
 
             //- oszlopok tulajdonságainak a beállítása
             // 1. oszlop: Helyezés
@@ -200,80 +204,18 @@ namespace Snooker
             adattablaFrissit();
         }
 
-        /* Oszlopok rendezése
-        //ha az oszlopok nevére klikkeléssel rendezni akarjuk a táblázatot, akkor kell hozzá ez a klikk esemény
+        //Oszlopok nevére klikkelve rendezés
         private void dataGridViewVersenyzo_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            try
+            if (rendezes) //növekvő
             {
-                oszlopNeve = dataGridViewVersenyzo.Columns[e.ColumnIndex].Index;
-                
-                dataGridViewVersenyzo.DataSource = versenyzokBeolvasasaRendezve();
-                adattablaFrissit();
+                this.dataGridViewVersenyzo.Sort(this.dataGridViewVersenyzo.Columns[e.ColumnIndex], ListSortDirection.Ascending);
             }
-            catch (Exception ex)
+            else //csökkenő
             {
-                MessageBox.Show($"{ex}");
+                this.dataGridViewVersenyzo.Sort(this.dataGridViewVersenyzo.Columns[e.ColumnIndex], ListSortDirection.Descending);
             }
+            rendezes = !rendezes;
         }
-        
-        private List<Versenyzo> versenyzokBeolvasasaRendezve()
-        {
-            versenyzok.Clear();
-
-            try
-            {
-                con.Open();
-                cmd = con.CreateCommand();
-
-                if (rendezes)
-                {
-                    cmd.CommandText = $"SELECT * FROM `snooker` ORDER BY {dataGridViewVersenyzo.Columns[oszlopNeve].Name} ASC;";
-
-                    using (MySqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        while (dr.Read())
-                        {
-                            try
-                            {
-                                versenyzok.Add(new Versenyzo(dr.GetInt32("Helyezes"), dr.GetString("Nev"), dr.GetString("Orszag"), dr.GetDecimal("Nyeremeny")));
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    cmd.CommandText = $"SELECT * FROM `snooker` ORDER BY {dataGridViewVersenyzo.Columns[oszlopNeve].Name} DESC;";
-
-                    using (MySqlDataReader dr = cmd.ExecuteReader())
-                    {
-                        while (dr.Read())
-                        {
-                            try
-                            {
-                                versenyzok.Add(new Versenyzo(dr.GetInt32("Helyezes"), dr.GetString("Nev"), dr.GetString("Orszag"), dr.GetDecimal("Nyeremeny")));
-                            }
-                            catch (ArgumentException ex)
-                            {
-                                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
-                            }
-                        }
-                    }
-                }
-                con.Close();
-                rendezes = !rendezes;
-            }
-            catch (MySqlException ex)
-            {
-                MessageBox.Show($"Az alábbi hiba lépett fel:\n{ex.Message}");
-                Environment.Exit(0);
-            }
-            return versenyzok;
-        }
-        */
     }
 }

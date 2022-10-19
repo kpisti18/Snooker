@@ -56,6 +56,7 @@
             this.dataGridViewVersenyzo.ReadOnly = true;
             this.dataGridViewVersenyzo.Size = new System.Drawing.Size(1200, 514);
             this.dataGridViewVersenyzo.TabIndex = 0;
+            this.dataGridViewVersenyzo.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewVersenyzo_ColumnHeaderMouseClick);
             this.dataGridViewVersenyzo.SelectionChanged += new System.EventHandler(this.dataGridViewVersenyzo_SelectionChanged);
             // 
             // groupBox1
